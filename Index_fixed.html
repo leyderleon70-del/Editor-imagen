@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Editor Vaca LoLa - Versión Profesional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2a2a2a;
+      --bg-tertiary: #3a3a3a;
+      --bg-panel: #242424;
+      --bg-input: #1e1e1e;
+      --bg-hover: #404040;
+      --border-primary: #4a4a4a;
+      --border-secondary: #5a5a5a;
+      --border-accent: #6a6a6a;
+      --text-primary: #e8e8e8;
+      --text-secondary: #b8b8b8;
+      --text-muted: #888888;
+      --accent-blue: #0066cc;
+      --accent-blue-hover: #0052a3;
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --radius-lg: 6px;
+      --transition-fast: all 0.1s ease;
+      --shadow-panel: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-button: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    
+    .btn {
+      background: var(--accent-blue);
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+    
+    .btn:hover {
+      background: var(--accent-blue-hover);
+    }
+    
+    .chat-modal {
+      position: fixed;
+      bottom: 90px;
+      right: 24px;
+      width: 400px;
+      height: 520px;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      display: none;
+      flex-direction: column;
+    }
+    
+    .chat-modal.show {
+      display: flex;
+    }
+    
+    #chatMessages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    
+    #chatInputArea {
+      padding: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    
+    #chatInput {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--border-primary);
+      border-radius: var(--radius-sm);
+      background: var(--bg-input);
+      color: var(--text-primary);
+    }
+    
+    .chat-message {
+      margin-bottom: 12px;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+    }
+    
+    .user-message {
+      background: var(--accent-blue);
+      color: white;
+      margin-left: 20%;
+    }
+    
+    .bot-message {
+      background: var(--bg-tertiary);
+      margin-right: 20%;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="chatModal" class="chat-modal">
+    <div id="chatMessages"></div>
+    <div id="chatInputArea">
+      <input type="text" id="chatInput" placeholder="Escribe tu mensaje..." />
+      <button id="chatSendBtn" class="btn">Enviar</button>
+    </div>
+  </div>
+
+  <script>
+    // Secure API key management
+    let GEMINI_API_KEY = null;
+    
+    // Get API key securely
+    function getApiKey() {
+      if (GEMINI_API_KEY) return GEMINI_API_KEY;
+      
+      // Try environment variable first (for production)
+      if (typeof process !== 'undefined' && process.env && process.env.GEMINI_API_KEY) {
+        GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+        return GEMINI_API_KEY;
+      }
+      
+      // Try localStorage
+      const storedKey = localStorage.getItem('gemini_api_key');
+      if (storedKey) {
+        GEMINI_API_KEY = storedKey;
+        return GEMINI_API_KEY;
+      }
+      
+      // Prompt user as last resort
+      const key = prompt('Por favor, ingresa tu API key de Google Gemini:');
+      if (key && key.trim()) {
+        GEMINI_API_KEY = key.trim();
+        localStorage.setItem('gemini_api_key', GEMINI_API_KEY);
+        return GEMINI_API_KEY;
+      }
+      
+      return null;
+    }
+    
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    
+    function addMessage(content, isUser = false) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `chat-message ${isUser ? 'user-message' : 'bot-message'}`;
+      messageDiv.textContent = content;
+      chatMessages.appendChild(messageDiv);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    async function sendToGemini(message) {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        return 'Error: API Key requerida. Por favor, configura tu API key de Google Gemini.';
+      }
+      
+      try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: `Eres un asistente experto en edición de imágenes. Usuario: ${message}`
+              }]
+            }]
+          })
+        });
+        
+        if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            localStorage.removeItem('gemini_api_key');
+            GEMINI_API_KEY = null;
+            throw new Error('API Key inválida. Por favor, verifica tu clave.');
+          }
+          if (response.status === 429) {
+            throw new Error('Límite de solicitudes alcanzado. Espera unos minutos.');
+          }
+          throw new Error(`Error ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data.candidates[0].content.parts[0].text;
+      } catch (error) {
+        return `Error: ${error.message}`;
+      }
+    }
+    
+    async function handleSendMessage() {
+      const message = chatInput.value.trim();
+      if (!message) return;
+      
+      addMessage(message, true);
+      chatInput.value = '';
+      
+      try {
+        const response = await sendToGemini(message);
+        addMessage(response);
+      } catch (error) {
+        addMessage('Error: No se pudo procesar la solicitud.');
+      }
+    }
+    
+    chatSendBtn.addEventListener('click', handleSendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage();
+      }
+    });
+    
+    // Show modal for testing
+    document.getElementById('chatModal').classList.add('show');
+    
+    // Welcome message
+    addMessage('¡Hola! Soy tu asistente de edición de imágenes. ¿En qué puedo ayudarte?');
+  </script>
+</body>
+</html>

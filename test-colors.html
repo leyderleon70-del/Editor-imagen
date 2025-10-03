@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Color Controls</title>
+    <script src="js/colorControls.js"></script>
+</head>
+<body>
+    <div class="color-selector">
+        <div class="color-tabs"></div>
+        <div class="color-sliders-container"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Testing color system...');
+            
+            if (window.ColorControlSystem) {
+                const colorSystem = new window.ColorControlSystem();
+                const container = document.querySelector('.color-selector').parentElement;
+                
+                colorSystem.init(container, () => {
+                    console.log('Color update callback triggered!');
+                    console.log('Current values:', colorSystem.getValues());
+                });
+                
+                // Test color processing
+                setTimeout(() => {
+                    console.log('Testing color processing...');
+                    const [r, g, b] = colorSystem.processPixel(255, 0, 0); // Pure red
+                    console.log('Processed red pixel:', r, g, b);
+                }, 1000);
+            } else {
+                console.error('ColorControlSystem not found!');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chatbot - Editor de Imágenes</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #1a1a1a;
+            color: #e8e8e8;
+            margin: 0;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #242424;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border-left: 4px solid #0066cc;
+        }
+        .test-title {
+            color: #0066cc;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .test-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #1e1e1e;
+            border-radius: 6px;
+        }
+        .test-command {
+            font-family: 'Courier New', monospace;
+            background: #333;
+            padding: 5px 8px;
+            border-radius: 4px;
+            color: #00ff88;
+        }
+        .test-result {
+            margin-top: 8px;
+            padding: 8px;
+            background: #0a0a0a;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .success { border-left: 3px solid #00cc66; }
+        .error { border-left: 3px solid #cc0000; }
+        .warning { border-left: 3px solid #ff6600; }
+        button {
+            background: #0066cc;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0052a3;
+        }
+        #testResults {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Suite - Chatbot Mejorado</h1>
+        
+        <div class="test-section">
+            <div class="test-title">🔧 Tests de Configuración</div>
+            <button onclick="testConfiguration()">Ejecutar Tests de Configuración</button>
+            <div id="configResults"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🤖 Tests de Utilidades</div>
+            <button onclick="testUtils()">Ejecutar Tests de Utilidades</button>
+            <div id="utilsResults"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">💬 Tests de Comandos</div>
+            <button onclick="testCommands()">Ejecutar Tests de Comandos</button>
+            <div id="commandsResults"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🎨 Tests de Estilos</div>
+            <button onclick="testStyles()">Ejecutar Tests de Estilos</button>
+            <div id="stylesResults"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">📊 Tests de Análisis</div>
+            <button onclick="testAnalysis()">Ejecutar Tests de Análisis</button>
+            <div id="analysisResults"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">🚀 Test Completo</div>
+            <button onclick="runAllTests()">Ejecutar Todos los Tests</button>
+            <div id="allResults"></div>
+        </div>
+
+        <div id="testResults"></div>
+    </div>
+
+    <!-- Cargar dependencias -->
+    <script src="js/chatbotConfig.js"></script>
+    <script src="js/chatbotUtils.js"></script>
+    <script src="js/chatbot.js"></script>
+
+    <script>
+        // Funciones de test
+        function createTestResult(name, success, message, details = '') {
+            return {
+                name,
+                success,
+                message,
+                details,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function displayResults(results, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            results.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `test-item ${result.success ? 'success' : 'error'}`;
+                div.innerHTML = `
+                    <div><strong>${result.name}</strong></div>
+                    <div class="test-command">${result.message}</div>
+                    ${result.details ? `<div class="test-result">${result.details}</div>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Test de configuración
+        function testConfiguration() {
+            const results = [];
+            
+            try {
+                // Test 1: Verificar que ChatbotConfig existe
+                if (typeof window.ChatbotConfig !== 'undefined') {
+                    results.push(createTestResult(
+                        'Carga de Configuración',
+                        true,
+                        'ChatbotConfig cargado correctamente',
+                        `Presets disponibles: ${Object.keys(window.ChatbotConfig.stylePresets || {}).length}`
+                    ));
+                } else {
+                    results.push(createTestResult(
+                        'Carga de Configuración',
+                        false,
+                        'ChatbotConfig no encontrado'
+                    ));
+                }
+
+                // Test 2: Verificar presets
+                const presets = window.ChatbotConfig?.stylePresets;
+                if (presets && Object.keys(presets).length > 0) {
+                    results.push(createTestResult(
+                        'Presets de Estilo',
+                        true,
+                        'Presets configurados correctamente',
+                        `Estilos: ${Object.keys(presets).join(', ')}`
+                    ));
+                } else {
+                    results.push(createTestResult(
+                        'Presets de Estilo',
+                        false,
+                        'No se encontraron presets'
+                    ));
+                }
+
+                // Test 3: Verificar comandos
+                const commands = window.ChatbotConfig?.commands;
+                if (commands) {
+                    results.push(createTestResult(
+                        'Comandos',
+                        true,
+                        'Comandos configurados',
+                        `Categorías: ${Object.keys(commands).length}`
+                    ));
+                } else {
+                    results.push(createTestResult(
+                        'Comandos',
+                        false,
+                        'Comandos no configurados'
+                    ));
+                }
+
+            } catch (error) {
+                results.push(createTestResult(
+                    'Error de Configuración',
+                    false,
+                    error.message
+                ));
+            }
+
+            displayResults(results, 'configResults');
+        }
+
+        // Test de utilidades
+        function testUtils() {
+            const results = [];
+            
+            try {
+                // Test 1: Verificar que ChatbotUtils existe
+                if (typeof window.ChatbotUtils !== 'undefined') {
+                    results.push(createTestResult(
+                        'Carga de Utilidades',
+                        true,
+                        'ChatbotUtils cargado correctamente'
+                    ));
+                } else {
+                    results.push(createTestResult(
+                        'Carga de Utilidades',
+                        false,
+                        'ChatbotUtils no encontrado'
+                    ));
+                    displayResults(results, 'utilsResults');
+                    return;
+                }
+
+                // Test 2: Detección de intenciones
+                const intent = window.ChatbotUtils.detectIntent('analiza mi imagen');
+                results.push(createTestResult(
+                    'Detección de Intenciones',
+                    intent === 'analyze',
+                    `Detectado: ${intent}`,
+                    'Comando: "analiza mi imagen"'
+                ));
+
+                // Test 3: Extracción de parámetros
+                const params = window.ChatbotUtils.extractAdjustmentParams('más contraste +20');
+                results.push(createTestResult(
+                    'Extracción de Parámetros',
+                    Object.keys(params).length > 0,
+                    `Parámetros extraídos: ${JSON.stringify(params)}`,
+                    'Comando: "más contraste +20"'
+                ));
+
+                // Test 4: Análisis de sentimiento
+                const sentiment = window.ChatbotUtils.analyzeSentiment('me gusta mucho esta imagen');
+                results.push(createTestResult(
+                    'Análisis de Sentimiento',
+                    sentiment.sentiment === 'positive',
+                    `Sentimiento: ${sentiment.sentiment} (${sentiment.score})`,
+                    'Texto: "me gusta mucho esta imagen"'
+                ));
+
+                // Test 5: Sanitización de entrada
+                const sanitized = window.ChatbotUtils.sanitizeInput('<script>alert("test")</script>hola');
+                results.push(createTestResult(
+                    'Sanitización de Entrada',
+                    !sanitized.includes('<script>'),
+                    `Texto sanitizado: "${sanitized}"`,
+                    'Entrada: "<script>alert(\"test\")</script>hola"'
+                ));
+
+            } catch (error) {
+                results.push(createTestResult(
+                    'Error de Utilidades',
+                    false,
+                    error.message
+                ));
+            }
+
+            displayResults(results, 'utilsResults');
+        }
+
+        // Test de comandos
+        function testCommands() {
+            const results = [];
+            
+            try {
+                // Crear instancia temporal del chatbot para tests
+                const chatbot = new window.ImageEditorChatbot();
+                
+                // Test 1: Análisis de comandos básicos
+                const testCommands = [
+                    { input: 'analiza mi imagen', expected: 'analyze' },
+                    { input: 'aplica estilo vintage', expected: 'apply' },
+                    { input: 'más contraste', expected: 'adjust' },
+                    { input: 'ayuda', expected: 'help' },
+                    { input: 'reset todos los ajustes', expected: 'reset' }
+                ];
+
+                testCommands.forEach(test => {
+                    const result = chatbot.analyzeCommand(test.input);
+                    results.push(createTestResult(
+                        `Comando: ${test.input}`,
+                        result.command === test.expected,
+                        `Detectado: ${result.command}`,
+                        `Esperado: ${test.expected}, Parámetros: ${JSON.stringify(result.params)}`
+                    ));
+                });
+
+                // Test 2: Respuestas contextuales
+                const contextResponse = chatbot.getContextualResponse('hola');
+                results.push(createTestResult(
+                    'Respuesta Contextual',
+                    contextResponse && contextResponse.text,
+                    'Respuesta generada correctamente',
+                    contextResponse ? contextResponse.text.substring(0, 100) + '...' : 'Sin respuesta'
+                ));
+
+            } catch (error) {
+                results.push(createTestResult(
+                    'Error de Comandos',
+                    false,
+                    error.message
+                ));
+            }
+
+            displayResults(results, 'commandsResults');
+        }
+
+        // Test de estilos
+        function testStyles() {
+            const results = [];
+            
+            try {
+                const chatbot = new window.ImageEditorChatbot();
+                
+                // Test de estilos disponibles
+                const styles = ['vintage', 'dramático', 'suave', 'cálido', 'frío'];
+                
+                styles.forEach(style => {
+                    try {
+                        const result = chatbot.applyStyle(style);
+                        results.push(createTestResult(
+                            `Estilo: ${style}`,
+                            result && result.adjustments,
+                            'Estilo aplicado correctamente',
+                            result ? `Ajustes: ${Object.keys(result.adjustments).length}` : 'Sin ajustes'
+                        ));
+                    } catch (error) {
+                        results.push(createTestResult(
+                            `Estilo: ${style}`,
+                            false,
+                            `Error: ${error.message}`
+                        ));
+                    }
+                });
+
+                // Test de estilo inexistente
+                const invalidStyle = chatbot.applyStyle('estilo_inexistente');
+                results.push(createTestResult(
+                    'Estilo Inexistente',
+                    invalidStyle.text.includes('no encontrado'),
+                    'Error manejado correctamente',
+                    'Respuesta apropiada para estilo no válido'
+                ));
+
+            } catch (error) {
+                results.push(createTestResult(
+                    'Error de Estilos',
+                    false,
+                    error.message
+                ));
+            }
+
+            displayResults(results, 'stylesResults');
+        }
+
+        // Test de análisis
+        function testAnalysis() {
+            const results = [];
+            
+            try {
+                // Test 1: Verificar métodos de análisis
+                const chatbot = new window.ImageEditorChatbot();
+                
+                // Simular contexto con imagen
+                chatbot.currentContext.imageLoaded = true;
+                
+                // Test de análisis sin imagen real
+                results.push(createTestResult(
+                    'Contexto de Imagen',
+                    chatbot.currentContext.imageLoaded,
+                    'Contexto configurado correctamente'
+                ));
+
+                // Test de formateo de mensajes
+                const formatted = chatbot.formatMessage('**Texto en negrita** y *cursiva*');
+                results.push(createTestResult(
+                    'Formateo de Mensajes',
+                    formatted.includes('<strong>') && formatted.includes('<em>'),
+                    'Markdown procesado correctamente',
+                    `Resultado: ${formatted}`
+                ));
+
+                // Test de mensaje de bienvenida
+                const welcome = chatbot.getWelcomeMessage();
+                results.push(createTestResult(
+                    'Mensaje de Bienvenida',
+                    welcome && welcome.length > 0,
+                    'Mensaje generado correctamente',
+                    `Longitud: ${welcome ? welcome.length : 0} caracteres`
+                ));
+
+            } catch (error) {
+                results.push(createTestResult(
+                    'Error de Análisis',
+                    false,
+                    error.message
+                ));
+            }
+
+            displayResults(results, 'analysisResults');
+        }
+
+        // Ejecutar todos los tests
+        function runAllTests() {
+            const startTime = Date.now();
+            
+            testConfiguration();
+            testUtils();
+            testCommands();
+            testStyles();
+            testAnalysis();
+            
+            const endTime = Date.now();
+            const duration = endTime - startTime;
+            
+            const summary = document.createElement('div');
+            summary.className = 'test-section';
+            summary.innerHTML = `
+                <div class="test-title">📋 Resumen de Tests</div>
+                <div class="test-item success">
+                    <strong>Tests completados en ${duration}ms</strong><br>
+                    Todos los componentes han sido verificados.<br>
+                    Revisa los resultados individuales arriba para detalles específicos.
+                </div>
+            `;
+            
+            document.getElementById('allResults').innerHTML = '';
+            document.getElementById('allResults').appendChild(summary);
+        }
+
+        // Ejecutar test básico al cargar
+        window.addEventListener('load', () => {
+            console.log('🧪 Test Suite cargado. Ejecuta los tests usando los botones.');
+            
+            // Test rápido de carga
+            const loadTest = document.createElement('div');
+            loadTest.className = 'test-section';
+            loadTest.innerHTML = `
+                <div class="test-title">✅ Estado de Carga</div>
+                <div class="test-item success">
+                    <strong>Página de tests cargada correctamente</strong><br>
+                    ChatbotConfig: ${typeof window.ChatbotConfig !== 'undefined' ? '✅' : '❌'}<br>
+                    ChatbotUtils: ${typeof window.ChatbotUtils !== 'undefined' ? '✅' : '❌'}<br>
+                    ImageEditorChatbot: ${typeof window.ImageEditorChatbot !== 'undefined' ? '✅' : '❌'}
+                </div>
+            `;
+            
+            document.getElementById('testResults').appendChild(loadTest);
+        });
+    </script>
+</body>
+</html>
